@@ -96,14 +96,14 @@
 
 //===MESH==============
 #include "rbc_mesh.h"
-#define MESH_ACCESS_ADDR        (RBC_MESH_ACCESS_ADDRESS_BLE_ADV)   /**< Access address for the mesh to operate on. */
-#define MESH_INTERVAL_MIN_MS    (100)                               /**< Mesh minimum advertisement interval in milliseconds. */
-#define MESH_CHANNEL            (38)                                /**< BLE channel to operate on. Single channel only. */
-#define COMMISSION_HANDLE        0
-#define SENSOR_MAX_LEN             22
+#define MESH_ACCESS_ADDR                (RBC_MESH_ACCESS_ADDRESS_BLE_ADV)   /**< Access address for the mesh to operate on. */
+#define MESH_INTERVAL_MIN_MS            (100)                               /**< Mesh minimum advertisement interval in milliseconds. */
+#define MESH_CHANNEL                    (38)                                /**< BLE channel to operate on. Single channel only. */
+#define COMMISSION_HANDLE               0
+#define SENSOR_MAX_LEN                  22
 #if defined BOARD_PCA10056 
 
-#define LED_START 							13
+#define LED_START                       13
 
 #endif
 //nrf_nvic_state_t nrf_nvic_state = {0};
@@ -115,7 +115,6 @@ static nrf_clock_lf_cfg_t m_clock_cfg =
 
 #define MESH_CLOCK_SOURCE       (m_clock_cfg)    /**< Clock source used by the Softdevice. For calibrating timeslot time. */
 
-
 #define EXAMPLE_DFU_BANK_ADDR   (0x40000)
 
 /**@brief Operation states.
@@ -123,8 +122,8 @@ static nrf_clock_lf_cfg_t m_clock_cfg =
  */
 enum OPERATION_STATES
 {
-  UNASSIGNED_ID_STATE  = 0,       /**< Channel Map. @ref ble_gap_opt_ch_map_t  */
-  REQUESTING_ID_STATE,               /**< Local connection latency. @ref ble_gap_opt_local_conn_latency_t */
+  UNASSIGNED_ID_STATE  = 0,         /**< Channel Map. @ref ble_gap_opt_ch_map_t  */
+  REQUESTING_ID_STATE,              /**< Local connection latency. @ref ble_gap_opt_local_conn_latency_t */
   NORMAL_OP_STATE
 };
 
@@ -133,23 +132,27 @@ enum OPERATION_STATES
  */
 enum COMMISSIONING_OPCODES
 {
-  PING  = 0,       /**< Channel Map. @ref ble_gap_opt_ch_map_t  */
-  REQUEST_HANDLE_OPCODE,               /**< Local connection latency. @ref ble_gap_opt_local_conn_latency_t */
+  PING = 0,                 /**< Channel Map. @ref ble_gap_opt_ch_map_t  */
+  REQUEST_HANDLE_OPCODE,    /**< Local connection latency. @ref ble_gap_opt_local_conn_latency_t */
   ASSIGN_HANDLE_OPCODE
 };
 
 
+APP_TIMER_DEF(m_one_sec_timer_id);                              /**< Battery timer. */
 
-APP_TIMER_DEF(m_one_sec_timer_id);                        /**< Battery timer. */
-#define ONE_SECOND_INTERVAL      APP_TIMER_TICKS(1000)                      /**< Battery level measurement interval (ticks). */
+#define ONE_SECOND_INTERVAL APP_TIMER_TICKS(1000)               /**< Battery level measurement interval (ticks). */
+
 uint16_t Handle_ID;
-uint8_t current_state					=UNASSIGNED_ID_STATE;
-uint16_t CHIP_ID ;
+uint8_t  current_state = UNASSIGNED_ID_STATE;
+uint16_t CHIP_ID;
 
 //======================
 uint8_t sensor_data[23];
-uint8_t button_value=0;
+uint8_t button_value = 0;
+
 #define MAX_NODE 10
+
+
 /**@brief Function for assert macro callback.
  *
  * @details This function will be called in case of an assert in the SoftDevice.
@@ -165,13 +168,6 @@ void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)
 {
     app_error_handler(DEAD_BEEF, line_num, p_file_name);
 }
-
-
-
-
-
-
-
 
 
 /**@brief Function for the SoftDevice initialization.
@@ -297,23 +293,24 @@ static void uart_init(void)
                        err_code);
     APP_ERROR_CHECK(err_code);
 }
+
+
 /**@snippet [LED Initialization] */
 void leds_buttons_init(void)
 {
-        nrf_gpio_cfg_output(LED_1);
-        nrf_gpio_cfg_output(LED_2);
-        nrf_gpio_cfg_output(LED_4);
-        nrf_gpio_cfg_output(LED_3);
-        nrf_gpio_pin_set(LED_1);
-        nrf_gpio_pin_set(LED_2);
-        nrf_gpio_pin_set(LED_3);
-        nrf_gpio_pin_set(LED_4);
-        nrf_gpio_cfg_input(BUTTON_1, NRF_GPIO_PIN_PULLUP);
-        nrf_gpio_cfg_input(BUTTON_2, NRF_GPIO_PIN_PULLUP);
-        nrf_gpio_cfg_input(BUTTON_3, NRF_GPIO_PIN_PULLUP);
-        nrf_gpio_cfg_input(BUTTON_4, NRF_GPIO_PIN_PULLUP);
+    nrf_gpio_cfg_output(LED_1);
+    nrf_gpio_cfg_output(LED_2);
+    nrf_gpio_cfg_output(LED_4);
+    nrf_gpio_cfg_output(LED_3);
+    nrf_gpio_pin_set(LED_1);
+    nrf_gpio_pin_set(LED_2);
+    nrf_gpio_pin_set(LED_3);
+    nrf_gpio_pin_set(LED_4);
+    nrf_gpio_cfg_input(BUTTON_1, NRF_GPIO_PIN_PULLUP);
+    nrf_gpio_cfg_input(BUTTON_2, NRF_GPIO_PIN_PULLUP);
+    nrf_gpio_cfg_input(BUTTON_3, NRF_GPIO_PIN_PULLUP);
+    nrf_gpio_cfg_input(BUTTON_4, NRF_GPIO_PIN_PULLUP);
 }
-
 
 
 /**@brief Function for initializing the nrf log module.
@@ -332,16 +329,18 @@ static void log_init(void)
 * @param[in] evt RBC event propagated from framework
 */
 static void rbc_mesh_event_handler(rbc_mesh_event_t* p_evt)
-{   uint32_t error_code;
+{   
+    uint32_t error_code;
     switch (p_evt->type)
     {
         case RBC_MESH_EVENT_TYPE_CONFLICTING_VAL:
-						NRF_LOG_INFO("\r\nCONFLITING VAL!\r\n");
+            NRF_LOG_INFO("\r\nCONFLITING VAL!\r\n");
+        
         case RBC_MESH_EVENT_TYPE_NEW_VAL:
-						NRF_LOG_INFO("\r\nNEW VAL!\r\n");
+            NRF_LOG_INFO("\r\nNEW VAL!\r\n");
 						
         case RBC_MESH_EVENT_TYPE_UPDATE_VAL:
-						NRF_LOG_INFO("\r\nUpdate VAL!\r\n");
+            NRF_LOG_INFO("\r\nUpdate VAL!\r\n");
             break;
 
         case RBC_MESH_EVENT_TYPE_TX:
@@ -358,33 +357,37 @@ static void rbc_mesh_event_handler(rbc_mesh_event_t* p_evt)
 	{
 			
 		case COMMISSION_HANDLE:
-            if (current_state==UNASSIGNED_ID_STATE) //Commision handle version is udpated, start requesting Handle_ID
+            if (current_state == UNASSIGNED_ID_STATE) //Commision handle version is udpated, start requesting Handle_ID
             {
-                current_state=REQUESTING_ID_STATE;
+                current_state = REQUESTING_ID_STATE;
                 printf("\r\nState now is REQUESTING_ID_STATE!\r\n");
                 break; 
             }  
             if ( p_evt->params.rx.p_data[0]==ASSIGN_HANDLE_OPCODE)
             {
-                uint16_t chip_id= ((uint16_t)p_evt->params.rx.p_data[1] << 8) | p_evt->params.rx.p_data[2];
+                uint16_t chip_id = ((uint16_t)p_evt->params.rx.p_data[1] << 8) | p_evt->params.rx.p_data[2];
                 
-                if (chip_id==CHIP_ID){ //Handle ID is assigned, Switch to normal operation
-                    Handle_ID=((uint16_t)p_evt->params.rx.p_data[3] << 8) | p_evt->params.rx.p_data[4];
-                    current_state=NORMAL_OP_STATE;
-                    error_code= rbc_mesh_value_enable(Handle_ID);
+                if (chip_id == CHIP_ID)
+                {
+                    //Handle ID is assigned, Switch to normal operation
+                    Handle_ID = ((uint16_t)p_evt->params.rx.p_data[3] << 8) | p_evt->params.rx.p_data[4];
+                    current_state = NORMAL_OP_STATE;
+                    error_code = rbc_mesh_value_enable(Handle_ID);
                     APP_ERROR_CHECK(error_code);
 
-                    printf("\r\nState now is NORMAL_OP! Handle= %d\r\n",Handle_ID);
+                    printf("\r\nState now is NORMAL_OP! Handle= %d\r\n", Handle_ID);
                 }
                     
             }
             break;
+            
         default:
             break;
             
-    } 
-                
+    }                 
 }
+
+
 /**@brief Function for starting application timers.
  */
 static void application_timers_start(void)
@@ -394,8 +397,7 @@ static void application_timers_start(void)
     // Start application timers.
     err_code = app_timer_start(m_one_sec_timer_id, ONE_SECOND_INTERVAL, NULL);
     APP_ERROR_CHECK(err_code);
-
-   }
+}
 
 
 /**@brief Function for handling the one second timer timeout.
@@ -409,22 +411,27 @@ static void one_sec_timeout_handler(void * p_context)
 {
     UNUSED_PARAMETER(p_context);
 	uint8_t mesh_data[3];
-    uint32_t error_code=0;
-	if (button_value==0){
+    uint32_t error_code = 0;
+    
+	if (button_value == 0)
+    {
         nrf_gpio_pin_toggle(LED_1);
-    }else {
-        if (button_value==1){                      
+    }
+    else 
+    {
+        if (button_value == 1)
+        {                      
             nrf_gpio_pin_clear(LED_1);
-        }else{
-            nrf_gpio_pin_set(LED_1);
-            
+        }
+        else
+        {       
+            nrf_gpio_pin_set(LED_1);          
         }
     }
         
     switch (current_state)
     {
-        case UNASSIGNED_ID_STATE:
-		 
+        case UNASSIGNED_ID_STATE:	 
             printf("\r\nSending COMMISSION HANDLE Enable\r\n");
 			error_code = rbc_mesh_value_enable(COMMISSION_HANDLE);
             break;
@@ -432,19 +439,23 @@ static void one_sec_timeout_handler(void * p_context)
 		case NORMAL_OP_STATE:
 			if (button_value) 
             {
-                sensor_data[0]=button_value;
-            }else{
-                sensor_data[0]=!nrf_gpio_pin_out_read(LED_1);
+                sensor_data[0] = button_value;
             }
-		    error_code= rbc_mesh_value_set(Handle_ID,sensor_data,23);
+            else
+            {
+                sensor_data[0] = !nrf_gpio_pin_out_read(LED_1);
+            }
+		    error_code = rbc_mesh_value_set(Handle_ID, sensor_data, 23);
             break;
+            
 		case REQUESTING_ID_STATE:
-			mesh_data[0]=REQUEST_HANDLE_OPCODE;
-			mesh_data[1]=CHIP_ID>>8;
-			mesh_data[2]=(uint8_t)CHIP_ID;
-			error_code=rbc_mesh_value_set(COMMISSION_HANDLE,mesh_data,3);
+			mesh_data[0] = REQUEST_HANDLE_OPCODE;
+			mesh_data[1] = CHIP_ID >> 8;
+			mesh_data[2] = (uint8_t)CHIP_ID;
+			error_code = rbc_mesh_value_set(COMMISSION_HANDLE, mesh_data, 3);
             APP_ERROR_CHECK(error_code);
             break;
+        
         default:
             break;
     }
@@ -462,7 +473,7 @@ static void timers_init(void)
     APP_ERROR_CHECK(err_code);
 
     // Create timers.
-		err_code = app_timer_create(&m_one_sec_timer_id,
+	err_code = app_timer_create(&m_one_sec_timer_id,
                                 APP_TIMER_MODE_REPEATED,
                                 one_sec_timeout_handler);
     APP_ERROR_CHECK(err_code);
@@ -494,7 +505,7 @@ int main(void)
    // advertising_init();
    // conn_params_init();
 
-		rbc_mesh_init_params_t init_params;
+    rbc_mesh_init_params_t init_params;
 
     init_params.access_addr = MESH_ACCESS_ADDR;
     init_params.interval_min_ms = MESH_INTERVAL_MIN_MS;
@@ -510,7 +521,7 @@ int main(void)
         APP_ERROR_CHECK(err_code);
     }   
     APP_ERROR_CHECK(error_code);
-		timers_init();
+    timers_init();
     application_timers_start();
     //current_state= REQUESTING_ID_STATE;
 	//Enable Commission handle
@@ -527,24 +538,20 @@ int main(void)
             rbc_mesh_event_handler(&evt);
             rbc_mesh_event_release(&evt);
         }
-        if(nrf_gpio_pin_read(BUTTON_1) == 0){
+        if(nrf_gpio_pin_read(BUTTON_1) == 0)
+        {
             button_value=1;            
             nrf_gpio_pin_clear(LED_1);
-
         }
-         if(nrf_gpio_pin_read(BUTTON_2) == 0){
+        if(nrf_gpio_pin_read(BUTTON_2) == 0)
+        {
             button_value=2;
             nrf_gpio_pin_set(LED_1);
-
         }
-         if(nrf_gpio_pin_read(BUTTON_3) == 0){
+        if(nrf_gpio_pin_read(BUTTON_3) == 0)
+        {
             button_value=0;
-        
-
-        }
-                
-           
-        
+        }       
     }
 }
 
