@@ -412,6 +412,7 @@ static void one_sec_timeout_handler(void * p_context)
     UNUSED_PARAMETER(p_context);
 	uint8_t mesh_data[3];
     uint32_t error_code = 0;
+    static uint8_t rolling_counter = 0;
     
 	if (button_value == 0)
     {
@@ -445,6 +446,7 @@ static void one_sec_timeout_handler(void * p_context)
             {
                 sensor_data[0] = !nrf_gpio_pin_out_read(LED_1);
             }
+            sensor_data[1] = rolling_counter++;
 		    error_code = rbc_mesh_value_set(Handle_ID, sensor_data, 23);
             break;
             
