@@ -106,14 +106,14 @@ static uint16_t                         m_ble_nus_max_data_len = BLE_GATT_ATT_MT
 #define MESH_ACCESS_ADDR        (RBC_MESH_ACCESS_ADDRESS_BLE_ADV)   /**< Access address for the mesh to operate on. */
 #define MESH_INTERVAL_MIN_MS    (100)                               /**< Mesh minimum advertisement interval in milliseconds. */
 #define MESH_CHANNEL            (38)                                /**< BLE channel to operate on. Single channel only. */
-#define COMMISSION_HANDLE        0
-#define CHIP_ID 								 0xAA
+#define COMMISSION_HANDLE       0
+#define CHIP_ID                 0xAA
 #define MESH_CLOCK_SOURCE       (m_clock_cfg)    /**< Clock source used by the Softdevice. For calibrating timeslot time. */
-#define ONE_SECOND_INTERVAL      APP_TIMER_TICKS(1000)                      /**< Battery level measurement interval (ticks). */
+#define ONE_SECOND_INTERVAL     APP_TIMER_TICKS(1000)                      /**< Battery level measurement interval (ticks). */
 #define EXAMPLE_DFU_BANK_ADDR   (0x40000)
-#define INVALID_CHIP_ID          0xFFFFFFFF
-#define MAX_NODE                 10
-#define NETWORK_FULL							0xFFFF
+#define INVALID_CHIP_ID         0xFFFFFFFF
+#define MAX_NODE                10
+#define NETWORK_FULL            0xFFFF
 
 APP_TIMER_DEF(m_one_second_tick_timer_id);                        /**< Battery timer. */
 
@@ -130,46 +130,51 @@ static nrf_clock_lf_cfg_t m_clock_cfg =
  */
 enum OPERATION_STATES
 {
-  UNASSIGNED_ID_STATE  = 0,       /**< Channel Map. @ref ble_gap_opt_ch_map_t  */
-  REQUESTING_ID_STATE,               /**< Local connection latency. @ref ble_gap_opt_local_conn_latency_t */
-  NORMAL_OP_STATE
+    UNASSIGNED_ID_STATE = 0,       /**< Channel Map. @ref ble_gap_opt_ch_map_t  */
+    REQUESTING_ID_STATE,           /**< Local connection latency. @ref ble_gap_opt_local_conn_latency_t */
+    NORMAL_OP_STATE
 };
+
 static uint32_t Node_ID_table[MAX_NODE];
+
 /**@brief Commissioning Opcode.
  * IDs that uniquely identify a GAP option.
  */
 enum COMMISSIONING_OPCODES
 {
-  PING  = 0,       /**not implemented*/
-  REQUEST_HANDLE_OPCODE,               /**< Local connection latency. @ref ble_gap_opt_local_conn_latency_t */
-  ASSIGN_HANDLE_OPCODE,
-	RESET_HANDLE_OPCODE,
+    PING = 0,                        /**not implemented*/
+    REQUEST_HANDLE_OPCODE,           /**< Local connection latency. @ref ble_gap_opt_local_conn_latency_t */
+    ASSIGN_HANDLE_OPCODE,
+    RESET_HANDLE_OPCODE,
 };
 
 
-
 uint16_t Handle_ID;
-uint8_t current_state	=UNASSIGNED_ID_STATE;
+uint8_t  current_state = UNASSIGNED_ID_STATE;
+
 #if defined BOARD_PCA10056 
-
 #define LED_START 							13
-
 #endif
+
 //======================
-#define SENSOR_DATA_SIZE 23
-#define MAX_SENSORS 10
+#define SENSOR_DATA_SIZE    23
+#define MAX_SENSORS         10
 static uint8_t sensor_data[MAX_SENSORS*SENSOR_DATA_SIZE];
 static void fs_evt_handler(fs_evt_t const * const evt, fs_ret_t result);
 
 static uint8_t active_sensors[MAX_SENSORS];
- volatile uint8_t fs_callback_flag;
+volatile uint8_t fs_callback_flag;
+
 #define NUM_PAGES 1
+
 FS_REGISTER_CFG(fs_config_t fs_config) =
-		{
-			  .callback  = fs_evt_handler, // Function for event callbacks.
-				.num_pages = NUM_PAGES,      // Number of physical flash pages required.
-				.priority  = 0xFE            // Priority for flash usage.
-		};
+{
+    .callback  = fs_evt_handler, // Function for event callbacks.
+    .num_pages = NUM_PAGES,      // Number of physical flash pages required.
+    .priority  = 0xFE            // Priority for flash usage.
+};
+
+
 /**@brief Function for assert macro callback.
  *
  * @details This function will be called in case of an assert in the SoftDevice.
@@ -362,9 +367,11 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
             err_code = bsp_indication_set(BSP_INDICATE_ADVERTISING);
             APP_ERROR_CHECK(err_code);
             break;
+        
         case BLE_ADV_EVT_IDLE:
             sleep_mode_enter();
             break;
+        
         default:
             break;
     }
@@ -402,7 +409,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
             APP_ERROR_CHECK(err_code);
             break; // BLE_GAP_EVT_SEC_PARAMS_REQUEST
 
-         case BLE_GAP_EVT_DATA_LENGTH_UPDATE_REQUEST:
+        case BLE_GAP_EVT_DATA_LENGTH_UPDATE_REQUEST:
         {
             ble_gap_data_length_params_t dl_params;
 
@@ -490,8 +497,8 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
     ble_advertising_on_ble_evt(p_ble_evt);
     bsp_btn_ble_on_ble_evt(p_ble_evt);
 	//	rbc_mesh_ble_evt_handler(p_ble_evt);
-
 }
+
 
 /**@brief Function for dispatching a system event to interested modules.
  *
@@ -637,39 +644,46 @@ void bsp_event_handler(bsp_event_t event)
  */
 static void one_second_tick_timeout_handler(void * p_context)
 {   uint32_t err_code;
-    uint16_t length=23;
+    uint16_t length = 23;
     uint8_t data_array[23];
-    uint8_t active_sensor_count=0;
-    err_code = rbc_mesh_value_get(1,data_array,&length);
+    uint8_t active_sensor_count = 0;
     
-    if (err_code==NRF_SUCCESS){
-        
+    err_code = rbc_mesh_value_get(1, data_array, &length);
+    
+    if (err_code == NRF_SUCCESS)
+    {
         err_code = ble_nus_string_send(&m_nus, &data_array[1], 5);
     
-        if ( (err_code != NRF_ERROR_INVALID_STATE) && (err_code != NRF_ERROR_BUSY) )
+        if ((err_code != NRF_ERROR_INVALID_STATE) && (err_code != NRF_ERROR_BUSY))
         {
             APP_ERROR_CHECK(err_code);
         }
     }
-    else{
+    else
+    {
         APP_ERROR_CHECK(0);
     }
     
-    for(uint8_t i=0;i<MAX_SENSORS;i++){
-        if (active_sensors[i]>0){
+    for(uint8_t i = 0; i < MAX_SENSORS; i++)
+    {
+        if (active_sensors[i] > 0)
+        {
             active_sensors[i]--;
             active_sensor_count++;
                 
-             printf("\r\nID: %d[",i);
-             for (uint8_t j=0;j < SENSOR_DATA_SIZE;j++) printf("%d-",sensor_data[j+i*SENSOR_DATA_SIZE]);
-             printf("]");
+            printf("\r\nID: %d[", i);
+            for (uint8_t j = 0; j < SENSOR_DATA_SIZE; j++)
+            {
+                printf("%d-", sensor_data[j + i * SENSOR_DATA_SIZE]);
+            }
+            printf("]");
         }
     }
     printf("\r\nNumber of Active Sensors: %d",active_sensor_count);
-    printf("\r\n==================================");
-    
-            
+    printf("\r\n==================================");           
 }
+
+
 /**@brief Function for the Timer initialization.
  *
  * @details Initializes the timer module. This creates and starts application timers.
@@ -687,8 +701,9 @@ static void timers_init(void)
                                 APP_TIMER_MODE_REPEATED,
                                 one_second_tick_timeout_handler);
     APP_ERROR_CHECK(err_code);
-
 }
+
+
 /**@brief Function for starting application timers.
  */
 static void application_timers_start(void)
@@ -698,8 +713,8 @@ static void application_timers_start(void)
     // Start application timers.
     err_code = app_timer_start(m_one_second_tick_timer_id, ONE_SECOND_INTERVAL, NULL);
     APP_ERROR_CHECK(err_code);
+}
 
-   }
 
 /**@brief   Function for handling app_uart events.
  *
@@ -708,12 +723,10 @@ static void application_timers_start(void)
  *          'new line' '\n' (hex 0x0A) or if the string has reached the maximum data length.
  */
 /**@snippet [Handling the data received over UART] */
-
 void uart_event_handle(app_uart_evt_t * p_event)
 {
 
 }
-
 /**@snippet [Handling the data received over UART] */
 
 
@@ -775,24 +788,23 @@ static void advertising_init(void)
     ble_advertising_conn_cfg_tag_set(CONN_CFG_TAG);
 }
 
+
 /**@snippet [LED Initialization] */
 void leds_buttons_init(void)
 {
-        nrf_gpio_cfg_output(LED_1);
-        nrf_gpio_cfg_output(LED_2);
-        nrf_gpio_cfg_output(LED_4);
-        nrf_gpio_cfg_output(LED_3);
-        nrf_gpio_pin_set(LED_1);
-        nrf_gpio_pin_set(LED_2);
-        nrf_gpio_pin_set(LED_3);
-        nrf_gpio_pin_set(LED_4);
-        nrf_gpio_cfg_input(BUTTON_1, NRF_GPIO_PIN_PULLUP);
-        nrf_gpio_cfg_input(BUTTON_2, NRF_GPIO_PIN_PULLUP);
-        nrf_gpio_cfg_input(BUTTON_3, NRF_GPIO_PIN_PULLUP);
-        nrf_gpio_cfg_input(BUTTON_4, NRF_GPIO_PIN_PULLUP);
+    nrf_gpio_cfg_output(LED_1);
+    nrf_gpio_cfg_output(LED_2);
+    nrf_gpio_cfg_output(LED_4);
+    nrf_gpio_cfg_output(LED_3);
+    nrf_gpio_pin_set(LED_1);
+    nrf_gpio_pin_set(LED_2);
+    nrf_gpio_pin_set(LED_3);
+    nrf_gpio_pin_set(LED_4);
+    nrf_gpio_cfg_input(BUTTON_1, NRF_GPIO_PIN_PULLUP);
+    nrf_gpio_cfg_input(BUTTON_2, NRF_GPIO_PIN_PULLUP);
+    nrf_gpio_cfg_input(BUTTON_3, NRF_GPIO_PIN_PULLUP);
+    nrf_gpio_cfg_input(BUTTON_4, NRF_GPIO_PIN_PULLUP);
 }
-
-
 
 
 /**@brief Function for initializing the nrf log module.
@@ -817,35 +829,36 @@ static void power_manage(void)
 uint16_t allocate_handle_ID(uint16_t chip_id)
 {
 	uint32_t i,ret;
-	for (i=0;i<MAX_NODE;i++)
+	for (i = 0; i < MAX_NODE; i++)
 	{
-		if (Node_ID_table[i]==chip_id) 
+		if (Node_ID_table[i] == chip_id) 
 		{
 			return i+1;
 		}
 	}
-	for (i=0;i<MAX_NODE;i++)			
+	for (i = 0; i < MAX_NODE; i++)			
 	{
-		if (Node_ID_table[i]==INVALID_CHIP_ID) 
+		if (Node_ID_table[i] == INVALID_CHIP_ID) 
 		{
-            Node_ID_table[i]=(uint32_t)chip_id;
-            fs_callback_flag=1;
+            Node_ID_table[i] = (uint32_t)chip_id;
+            fs_callback_flag = 1;
                     
-            ret = fs_store(&fs_config, fs_config.p_start_addr+i, &Node_ID_table[i], 1,NULL);  
+            ret = fs_store(&fs_config, fs_config.p_start_addr + i, &Node_ID_table[i], 1, NULL);  
            
             if (ret == FS_SUCCESS)
             {
-                while(fs_callback_flag == 1)  { power_manage(); }		
-            }
-		
-		
+                while(fs_callback_flag == 1)  
+                { 
+                    power_manage(); 
+                }		
+            }		
             return i+1;
         }
 	}
-	
-	return NETWORK_FULL;
-	
+	return NETWORK_FULL;	
 }
+
+
 /**
 * @brief RBC_MESH framework event handler. Defined in rbc_mesh.h. Handles
 *   events coming from the mesh. Sets LEDs according to data
@@ -853,56 +866,59 @@ uint16_t allocate_handle_ID(uint16_t chip_id)
 * @param[in] evt RBC event propagated from framework
 */
 static void rbc_mesh_event_handler(rbc_mesh_event_t* p_evt)
-{ 	uint8_t mesh_data[5];
+{ 	
+    uint8_t mesh_data[5];
     //For debugging checking comming value type
     switch (p_evt->type)
     {
         case RBC_MESH_EVENT_TYPE_CONFLICTING_VAL:
             NRF_LOG_INFO("\r\nCONFLICT VAL!");
+            break;
+        
         case RBC_MESH_EVENT_TYPE_NEW_VAL:
             NRF_LOG_INFO("\r\nNEW VAL!");
+            break;
+        
         case RBC_MESH_EVENT_TYPE_UPDATE_VAL:
             NRF_LOG_INFO("\r\nUpdate VAL!");
 
-         switch (p_evt->params.rx.value_handle)
+            switch (p_evt->params.rx.value_handle)
             {
                 case COMMISSION_HANDLE:
-                    if ((p_evt->params.rx.p_data[0]==REQUESTING_ID_STATE)&&(p_evt->params.rx.data_len==3))
+                    if ((p_evt->params.rx.p_data[0] == REQUESTING_ID_STATE) && (p_evt->params.rx.data_len == 3))
                     {
-                        uint16_t chip_id,handle_ID;
+                        uint16_t chip_id, handle_ID;
                         chip_id	= ((uint16_t)p_evt->params.rx.p_data[1] << 8) | p_evt->params.rx.p_data[2];
                         handle_ID = allocate_handle_ID(chip_id);
-                        if (handle_ID!=NETWORK_FULL)
+                        if (handle_ID != NETWORK_FULL)
                         {
-                            mesh_data[0]=ASSIGN_HANDLE_OPCODE;
-                            mesh_data[1]=chip_id>>8;;
-                            mesh_data[2]=chip_id;
-                            mesh_data[3]=handle_ID>>8;
-                            mesh_data[4]=handle_ID;
-                            rbc_mesh_value_set(COMMISSION_HANDLE,mesh_data,5);    
+                            mesh_data[0] = ASSIGN_HANDLE_OPCODE;
+                            mesh_data[1] = chip_id >> 8;
+                            mesh_data[2] = chip_id;
+                            mesh_data[3] = handle_ID >> 8;
+                            mesh_data[4] = handle_ID;
+                            rbc_mesh_value_set(COMMISSION_HANDLE, mesh_data, 5);    
                         }
-                       }
+                    }
                     break;
+                       
                 default:
-                     /*printf("\r\nID_: %d[",p_evt->params.rx.value_handle,p_evt->params.rx.data_len);
+                    /*printf("\r\nID_: %d[",p_evt->params.rx.value_handle,p_evt->params.rx.data_len);
                     for (uint8_t i=0;i < p_evt->params.rx.data_len;i++) printf("%d-",p_evt->params.rx.p_data[i]);
                     printf("]");*/
-                     active_sensors[p_evt->params.rx.value_handle]=10;
-                 
-                     memcpy(&sensor_data[p_evt->params.rx.value_handle*SENSOR_DATA_SIZE],p_evt->params.rx.p_data,  p_evt->params.rx.data_len);
-                     if (( !(p_evt->params.rx.p_data[0]%2))&&(p_evt->params.rx.value_handle<4))
+                    active_sensors[p_evt->params.rx.value_handle] = 10;
+
+                    memcpy(&sensor_data[p_evt->params.rx.value_handle * SENSOR_DATA_SIZE], p_evt->params.rx.p_data, p_evt->params.rx.data_len);
+                    if ((!(p_evt->params.rx.p_data[0] % 2)) && (p_evt->params.rx.value_handle < 4))
                     {
-                            NRF_GPIO->OUTSET = (1 << (p_evt->params.rx.value_handle + LED_START-1));
+                        NRF_GPIO->OUTSET = (1 << (p_evt->params.rx.value_handle + LED_START - 1));
                     }
                     else
                     {
-                            NRF_GPIO->OUTCLR = (1 << (p_evt->params.rx.value_handle + LED_START-1));
+                        NRF_GPIO->OUTCLR = (1 << (p_evt->params.rx.value_handle + LED_START - 1));
                     }
-                    break;
-                    
-            }   
-
-        
+                    break;              
+            }           
             break;
 
         case RBC_MESH_EVENT_TYPE_TX:
@@ -912,24 +928,28 @@ static void rbc_mesh_event_handler(rbc_mesh_event_t* p_evt)
             /* init BLE gateway softdevice application: */
             //nrf_adv_conn_init();
             break;
+        
         default:
             break;
-    }
-
-     
+    }   
 }
+
+
 static void fs_evt_handler(fs_evt_t const * const evt, fs_ret_t result)
 {
     if (result != FS_SUCCESS)
-    {printf("    ISSUE   \n\r");
+    {
+        printf("    ISSUE   \n\r");
         //bsp_indication_set(BSP_INDICATE_FATAL_ERROR);
     }
-		else
-		{
-				printf("    fstorage command successfully completed   \n\r");
-				fs_callback_flag = 0;
-		}
+    else
+    {
+        printf("    fstorage command successfully completed   \n\r");
+        fs_callback_flag = 0;
+    }
 }
+
+
 /*
 static void fstorage_test(void)
 {
@@ -996,22 +1016,27 @@ static void fstorage_test(void)
 		}
 		printf("\r\n");
 }*/
+
+
 void initialize_node_id_table(void)
 {
     //If button 4 is pressed , erase Node_ID_table , otherwise restore it from flash
-    if(nrf_gpio_pin_read(BUTTON_4) == 0){
-        
+    if(nrf_gpio_pin_read(BUTTON_4) == 0)
+    {
         memset(Node_ID_table, INVALID_CHIP_ID, sizeof(Node_ID_table));  
-        fs_callback_flag=1;
-        uint32_t ret = fs_erase(&fs_config, fs_config.p_start_addr, 1,NULL);
+        fs_callback_flag = 1;
+        uint32_t ret = fs_erase(&fs_config, fs_config.p_start_addr, 1, NULL);
 		APP_ERROR_CHECK(ret);
 		while(fs_callback_flag == 1);
-    }else{
-        
-    memcpy(Node_ID_table,fs_config.p_start_addr,sizeof(Node_ID_table));
+    }
+    else
+    {
+        memcpy(Node_ID_table, fs_config.p_start_addr, sizeof(Node_ID_table));
     }
     
 }  
+
+
 /**@brief Application main function.
  */
 int main(void)
@@ -1019,7 +1044,7 @@ int main(void)
     uint32_t err_code;
     bool     erase_bonds;
     rbc_mesh_event_t evt;
-		uint8_t mesh_data[2];
+    uint8_t mesh_data[2];
     // Initialize.
     err_code = app_timer_init();
     APP_ERROR_CHECK(err_code);
@@ -1058,7 +1083,7 @@ int main(void)
         APP_ERROR_CHECK(err_code);
     }
 	//Set initial version for commission handle
-    err_code = rbc_mesh_value_set(COMMISSION_HANDLE,mesh_data,0);    
+    err_code = rbc_mesh_value_set(COMMISSION_HANDLE, mesh_data, 0);    
 	//memset(Node_ID_table, INVALID_CHIP_ID, sizeof(Node_ID_table));
 		
 	//printf("\r\n HANDLE ID %x - %x \r\n", Node_ID_table[1],Node_ID_table[2]);
@@ -1066,6 +1091,7 @@ int main(void)
     err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
     APP_ERROR_CHECK(err_code);
     application_timers_start();
+    
     // Enter main loop.
     for (;;)
     {
