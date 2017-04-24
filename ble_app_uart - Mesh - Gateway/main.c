@@ -90,7 +90,7 @@
 
 #define DEAD_BEEF                       0xDEADBEEF                                  /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
-#define UART_TX_BUF_SIZE                256                                         /**< UART TX buffer size. */
+#define UART_TX_BUF_SIZE                1024                                         /**< UART TX buffer size. */
 #define UART_RX_BUF_SIZE                256                                         /**< UART RX buffer size. */
 
 static ble_nus_t                        m_nus;                                      /**< Structure to identify the Nordic UART Service. */
@@ -113,6 +113,7 @@ static uint16_t                         m_ble_nus_max_data_len = BLE_GATT_ATT_MT
 #define EXAMPLE_DFU_BANK_ADDR   (0x40000)
 #define INVALID_CHIP_ID         0xFFFFFFFF
 #define MAX_NODE                10
+#define NODE_ID_START            1
 #define NETWORK_FULL            0xFFFF
 
 APP_TIMER_DEF(m_one_second_tick_timer_id);                        /**< Battery timer. */
@@ -135,7 +136,7 @@ enum OPERATION_STATES
     NORMAL_OP_STATE
 };
 
-static uint32_t Node_ID_table[MAX_NODE];
+static uint32_t Node_ID_table[MAX_NODE+NODE_ID_START];
 
 /**@brief Commissioning Opcode.
  * IDs that uniquely identify a GAP option.
@@ -158,11 +159,11 @@ uint8_t  current_state = UNASSIGNED_ID_STATE;
 
 //======================
 #define SENSOR_DATA_SIZE    23
-#define MAX_SENSORS         10
-static uint8_t sensor_data[MAX_SENSORS*SENSOR_DATA_SIZE];
+
+static uint8_t sensor_data[MAX_NODE*SENSOR_DATA_SIZE];
 static void fs_evt_handler(fs_evt_t const * const evt, fs_ret_t result);
 
-static uint8_t active_sensors[MAX_SENSORS];
+static uint8_t active_sensors[MAX_NODE];
 volatile uint8_t fs_callback_flag;
 
 #define NUM_PAGES 1
@@ -664,7 +665,7 @@ static void one_second_tick_timeout_handler(void * p_context)
         APP_ERROR_CHECK(0);
     }
     
-    for(uint8_t i = 0; i < MAX_SENSORS; i++)
+    for(uint8_t i = 0; i < MAX_NODE; i++)
     {
         if (active_sensors[i] > 0)
         {
@@ -825,18 +826,19 @@ static void power_manage(void)
 }
 
 
-//allocating handle ID for a sensor
+/**@brief Function forallocating handle ID for a sensor
+ */
 uint16_t allocate_handle_ID(uint16_t chip_id)
 {
 	uint32_t i,ret;
-	for (i = 0; i < MAX_NODE; i++)
+	for (i = NODE_ID_START; i < MAX_NODE+NODE_ID_START; i++)
 	{
 		if (Node_ID_table[i] == chip_id) 
 		{
-			return i+1;
+			return i;
 		}
 	}
-	for (i = 0; i < MAX_NODE; i++)			
+	for (i = NODE_ID_START; i < MAX_NODE+NODE_ID_START; i++)			
 	{
 		if (Node_ID_table[i] == INVALID_CHIP_ID) 
 		{
@@ -852,7 +854,7 @@ uint16_t allocate_handle_ID(uint16_t chip_id)
                     power_manage(); 
                 }		
             }		
-            return i+1;
+            return i;
         }
 	}
 	return NETWORK_FULL;	
@@ -872,19 +874,20 @@ static void rbc_mesh_event_handler(rbc_mesh_event_t* p_evt)
     switch (p_evt->type)
     {
         case RBC_MESH_EVENT_TYPE_CONFLICTING_VAL:
-            NRF_LOG_INFO("\r\nCONFLICT VAL!");
+            //NRF_LOG_INFO("\r\nCONFLICT VAL!");
             break;
         
         case RBC_MESH_EVENT_TYPE_NEW_VAL:
-            NRF_LOG_INFO("\r\nNEW VAL!");
+            //NRF_LOG_INFO("\r\nNEW VAL!");
             break;
         
         case RBC_MESH_EVENT_TYPE_UPDATE_VAL:
-            NRF_LOG_INFO("\r\nUpdate VAL!");
+            //NRF_LOG_INFO("\r\nUpdate VAL!");
 
             switch (p_evt->params.rx.value_handle)
             {
                 case COMMISSION_HANDLE:
+                    NRF_LOG_INFO("\r\nCommission request!");
                     if ((p_evt->params.rx.p_data[0] == REQUESTING_ID_STATE) && (p_evt->params.rx.data_len == 3))
                     {
                         uint16_t chip_id, handle_ID;
@@ -892,12 +895,17 @@ static void rbc_mesh_event_handler(rbc_mesh_event_t* p_evt)
                         handle_ID = allocate_handle_ID(chip_id);
                         if (handle_ID != NETWORK_FULL)
                         {
+                            NRF_LOG_INFO("\r\nAssigned new Handle ID!");
                             mesh_data[0] = ASSIGN_HANDLE_OPCODE;
                             mesh_data[1] = chip_id >> 8;
                             mesh_data[2] = chip_id;
                             mesh_data[3] = handle_ID >> 8;
                             mesh_data[4] = handle_ID;
                             rbc_mesh_value_set(COMMISSION_HANDLE, mesh_data, 5);    
+                        }
+                        else
+                        {
+                            NRF_LOG_INFO("\r\nNetwork full, rejected request!");
                         }
                     }
                     break;
@@ -906,16 +914,16 @@ static void rbc_mesh_event_handler(rbc_mesh_event_t* p_evt)
                     /*printf("\r\nID_: %d[",p_evt->params.rx.value_handle,p_evt->params.rx.data_len);
                     for (uint8_t i=0;i < p_evt->params.rx.data_len;i++) printf("%d-",p_evt->params.rx.p_data[i]);
                     printf("]");*/
-                    active_sensors[p_evt->params.rx.value_handle] = 10;
-
-                    memcpy(&sensor_data[p_evt->params.rx.value_handle * SENSOR_DATA_SIZE], p_evt->params.rx.p_data, p_evt->params.rx.data_len);
-                    if ((!(p_evt->params.rx.p_data[0] % 2)) && (p_evt->params.rx.value_handle < 4))
+                    active_sensors[p_evt->params.rx.value_handle-NODE_ID_START] = 10;
+                    //Update data in to database
+                    memcpy(&sensor_data[(p_evt->params.rx.value_handle-NODE_ID_START) * SENSOR_DATA_SIZE], p_evt->params.rx.p_data, p_evt->params.rx.data_len);
+                    if ((!(p_evt->params.rx.p_data[0] % 2)) && (p_evt->params.rx.value_handle-NODE_ID_START < 4))
                     {
-                        NRF_GPIO->OUTSET = (1 << (p_evt->params.rx.value_handle + LED_START - 1));
+                        NRF_GPIO->OUTSET = (1 << (p_evt->params.rx.value_handle + LED_START - NODE_ID_START));
                     }
                     else
                     {
-                        NRF_GPIO->OUTCLR = (1 << (p_evt->params.rx.value_handle + LED_START - 1));
+                        NRF_GPIO->OUTCLR = (1 << (p_evt->params.rx.value_handle + LED_START - NODE_ID_START));
                     }
                     break;              
             }           
@@ -948,74 +956,6 @@ static void fs_evt_handler(fs_evt_t const * const evt, fs_ret_t result)
         fs_callback_flag = 0;
     }
 }
-
-
-/*
-static void fstorage_test(void)
-{
-		static uint32_t data;
-		uint32_t flash_data[4];
-	
-		
-		
-		fs_ret_t ret = fs_init();
-		if (ret != FS_SUCCESS)
-		{
-					printf("ISSUE");
-		}
-		
-		// Erase one page (page 0).
-		printf("Erasing a flash page at address 0x%X\r\n", (uint32_t)fs_config.p_start_addr);
-		fs_callback_flag = 1;
-		ret = fs_erase(&fs_config, fs_config.p_start_addr, 1,NULL);
-		if (ret != FS_SUCCESS)
-		{
-			printf("ISSUE");
-		}
-		while(fs_callback_flag == 1)  { //power_manage();
-            }
-		
-		//Read the first 4 words of the page
-		printf("Data read from flash address 0x%X: ", (uint32_t)fs_config.p_start_addr);
-		for(int i=0; i<4; i++)
-		{
-				flash_data[i] = *(fs_config.p_start_addr + i);
-				printf("%X ", flash_data[i]);
-		}
-		printf("\r\n");
-		
-		//Write the first byte
-		data = 0xAAAAAAAA;
-		printf("Writing data 0x%X to address 0x%X\r\n", data, (uint32_t)fs_config.p_start_addr);
-		fs_callback_flag = 1;
-		ret = fs_store(&fs_config, fs_config.p_start_addr, &data, 1,NULL);      //Write data to memory address 0x0003F000. Check it with command: nrfjprog --memrd 0x0003F000 --n 16
-		if (ret != FS_SUCCESS)
-		{
-				bsp_indication_set(BSP_INDICATE_FATAL_ERROR);
-		}
-		while(fs_callback_flag == 1)  { power_manage(); }
-		
-		//Write second byte
-		data = 0xBBBBBBBB;
-		printf("Writing data 0x%X to address 0x%X\r\n", data, (uint32_t)fs_config.p_start_addr + 4);
-		fs_callback_flag = 1;
-		ret = fs_store(&fs_config, fs_config.p_start_addr + 1, &data, 1,NULL);      //Write data to memory address 0x0003F000. Check it with command: nrfjprog --memrd 0x0003F000 --n 16
-		if (ret != FS_SUCCESS)
-		{
-				bsp_indication_set(BSP_INDICATE_FATAL_ERROR);
-		}
-		while(fs_callback_flag == 1)  { power_manage(); }
-		
-		//Read the first 4 words of the page
-		printf("Data read from flash address 0x%X: ", (uint32_t)fs_config.p_start_addr);
-        memcpy(flash_data,fs_config.p_start_addr,6);
-		for(int i=0; i<4; i++)
-		{
-		//		flash_data[i] = *(fs_config.p_start_addr + i);
-				printf("%X ", flash_data[i]);
-		}
-		printf("\r\n");
-}*/
 
 
 void initialize_node_id_table(void)
@@ -1060,13 +1000,9 @@ int main(void)
     services_init();
     advertising_init();
     conn_params_init();
-    //fstorage_test();
     fs_init();
     initialize_node_id_table();
-    
 	rbc_mesh_init_params_t init_params;
-   
-    // while(1);
     init_params.access_addr = MESH_ACCESS_ADDR;
     init_params.interval_min_ms = MESH_INTERVAL_MIN_MS;
     init_params.channel = MESH_CHANNEL;
@@ -1077,17 +1013,14 @@ int main(void)
     APP_ERROR_CHECK(err_code);
 
     /* enable handle ID for all nodes*/
-    for (uint32_t i = 0; i < MAX_NODE; ++i)
+    for (uint32_t i = 0; i < MAX_NODE+NODE_ID_START; i++)
     {
         err_code = rbc_mesh_value_enable(i);
         APP_ERROR_CHECK(err_code);
     }
 	//Set initial version for commission handle
     err_code = rbc_mesh_value_set(COMMISSION_HANDLE, mesh_data, 0);    
-	//memset(Node_ID_table, INVALID_CHIP_ID, sizeof(Node_ID_table));
-		
-	//printf("\r\n HANDLE ID %x - %x \r\n", Node_ID_table[1],Node_ID_table[2]);
-    NRF_LOG_INFO("UART Start!\r\n");
+    NRF_LOG_INFO("Mesh Start!\r\n");
     err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
     APP_ERROR_CHECK(err_code);
     application_timers_start();

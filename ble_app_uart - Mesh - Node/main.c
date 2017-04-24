@@ -150,8 +150,8 @@ uint16_t CHIP_ID;
 uint8_t sensor_data[23];
 uint8_t button_value = 0;
 
-#define MAX_NODE 10
-
+#define MAX_NODE                10
+#define NODE_ID_START           1
 
 /**@brief Function for assert macro callback.
  *
@@ -213,13 +213,9 @@ static void ble_stack_init(void)
     ble_cfg.conn_cfg.params.gap_conn_cfg.conn_count   = BLE_GAP_CONN_COUNT_DEFAULT;
     err_code = sd_ble_cfg_set(BLE_CONN_CFG_GAP, &ble_cfg, ram_start);
     APP_ERROR_CHECK(err_code);
-
-
-		
     // Enable BLE stack.
     err_code = softdevice_enable(&ram_start);
     APP_ERROR_CHECK(err_code);
-
     // Subscribe for BLE events.
     //err_code = softdevice_ble_evt_handler_set(ble_evt_dispatch);
     //APP_ERROR_CHECK(err_code);
@@ -254,7 +250,8 @@ void uart_event_handle(app_uart_evt_t * p_event)
             break;
 
         case APP_UART_COMMUNICATION_ERROR:
-            APP_ERROR_HANDLER(p_event->data.error_communication);
+            //ignore this just in case we're running on battery
+            //APP_ERROR_HANDLER(p_event->data.error_communication);
             break;
 
         case APP_UART_FIFO_ERROR:
@@ -360,7 +357,7 @@ static void rbc_mesh_event_handler(rbc_mesh_event_t* p_evt)
             if (current_state == UNASSIGNED_ID_STATE) //Commision handle version is udpated, start requesting Handle_ID
             {
                 current_state = REQUESTING_ID_STATE;
-                printf("\r\nState now is REQUESTING_ID_STATE!\r\n");
+             //   printf("\r\nState now is REQUESTING_ID_STATE!\r\n");
                 break; 
             }  
             if ( p_evt->params.rx.p_data[0]==ASSIGN_HANDLE_OPCODE)
@@ -375,7 +372,7 @@ static void rbc_mesh_event_handler(rbc_mesh_event_t* p_evt)
                     error_code = rbc_mesh_value_enable(Handle_ID);
                     APP_ERROR_CHECK(error_code);
 
-                    printf("\r\nState now is NORMAL_OP! Handle= %d\r\n", Handle_ID);
+                 //   printf("\r\nState now is NORMAL_OP! Handle= %d\r\n", Handle_ID);
                 }
                     
             }
@@ -433,7 +430,7 @@ static void one_sec_timeout_handler(void * p_context)
     switch (current_state)
     {
         case UNASSIGNED_ID_STATE:	 
-            printf("\r\nSending COMMISSION HANDLE Enable\r\n");
+           // printf("\r\nSending COMMISSION HANDLE Enable\r\n");
 			error_code = rbc_mesh_value_enable(COMMISSION_HANDLE);
             break;
 		
@@ -495,29 +492,26 @@ int main(void)
     // Initialize.
     err_code = app_timer_init();
     APP_ERROR_CHECK(err_code);
+     nrf_gpio_pin_set(LED_1);
 	timers_init();
     uart_init();
+     
     log_init();
-
-    //buttons_leds_init(&erase_bonds);
+   
     ble_stack_init();
-   // gap_params_init();
-   // gatt_init();
-   // services_init();
-   // advertising_init();
-   // conn_params_init();
-
+     
     rbc_mesh_init_params_t init_params;
-
+ 
     init_params.access_addr = MESH_ACCESS_ADDR;
     init_params.interval_min_ms = MESH_INTERVAL_MIN_MS;
     init_params.channel = MESH_CHANNEL;
     init_params.lfclksrc = MESH_CLOCK_SOURCE;
     init_params.tx_power = RBC_MESH_TXPOWER_0dBm ;
-    
+      
     uint32_t error_code = rbc_mesh_init(init_params);
+   
      /* enable handle ID for all nodes*/
-    for (uint32_t i = 0; i < MAX_NODE; ++i)
+    for (uint32_t i = 0; i < MAX_NODE+NODE_ID_START; ++i)
     {
         err_code = rbc_mesh_value_enable(i);
         APP_ERROR_CHECK(err_code);
@@ -525,10 +519,10 @@ int main(void)
     APP_ERROR_CHECK(error_code);
     timers_init();
     application_timers_start();
-    //current_state= REQUESTING_ID_STATE;
+    current_state= REQUESTING_ID_STATE;
 	//Enable Commission handle
-    printf("\r\nUART Start!\r\n");
-    NRF_LOG_INFO("UART Start!\r\n");
+   
+    NRF_LOG_INFO("Mesh Starts!\r\n");
    // err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
    // APP_ERROR_CHECK(err_code);
 

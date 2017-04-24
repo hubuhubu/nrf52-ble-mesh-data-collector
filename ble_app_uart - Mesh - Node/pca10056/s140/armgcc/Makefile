@@ -34,22 +34,22 @@ SRC_FILES += \
   $(SDK_ROOT)/components/libraries/bsp/bsp_btn_ble.c \
   $(SDK_ROOT)/components/libraries/bsp/bsp_nfc.c \
   $(PROJ_DIR)/main.c \
-  $(PROJ_DIR)/rbc_mesh/src/event_handler.c \
-  $(PROJ_DIR)/rbc_mesh/src/fifo.c \
-  $(PROJ_DIR)/rbc_mesh/src/handle_storage.c \
-  $(PROJ_DIR)/rbc_mesh/src/mesh_flash.c \
-  $(PROJ_DIR)/rbc_mesh/src/mesh_gatt.c \
-  $(PROJ_DIR)/rbc_mesh/src/mesh_packet.c \
-  $(PROJ_DIR)/rbc_mesh/src/nrf_flash.c \
-  $(PROJ_DIR)/rbc_mesh/src/radio_control.c \
-  $(PROJ_DIR)/rbc_mesh/src/rand.c \
-  $(PROJ_DIR)/rbc_mesh/src/rbc_mesh.c \
-  $(PROJ_DIR)/rbc_mesh/src/timer.c \
-  $(PROJ_DIR)/rbc_mesh/src/timer_scheduler.c \
-  $(PROJ_DIR)/rbc_mesh/src/timeslot.c \
-  $(PROJ_DIR)/rbc_mesh/src/transport_control.c \
-  $(PROJ_DIR)/rbc_mesh/src/trickle.c \
-  $(PROJ_DIR)/rbc_mesh/src/version_handler.c \
+  $(PROJ_DIR)/../rbc_mesh/src/event_handler.c \
+  $(PROJ_DIR)/../rbc_mesh/src/fifo.c \
+  $(PROJ_DIR)/../rbc_mesh/src/handle_storage.c \
+  $(PROJ_DIR)/../rbc_mesh/src/mesh_flash.c \
+  $(PROJ_DIR)/../rbc_mesh/src/mesh_gatt.c \
+  $(PROJ_DIR)/../rbc_mesh/src/mesh_packet.c \
+  $(PROJ_DIR)/../rbc_mesh/src/nrf_flash.c \
+  $(PROJ_DIR)/../rbc_mesh/src/radio_control.c \
+  $(PROJ_DIR)/../rbc_mesh/src/rand.c \
+  $(PROJ_DIR)/../rbc_mesh/src/rbc_mesh.c \
+  $(PROJ_DIR)/../rbc_mesh/src/timer.c \
+  $(PROJ_DIR)/../rbc_mesh/src/timer_scheduler.c \
+  $(PROJ_DIR)/../rbc_mesh/src/timeslot.c \
+  $(PROJ_DIR)/../rbc_mesh/src/transport_control.c \
+  $(PROJ_DIR)/../rbc_mesh/src/trickle.c \
+  $(PROJ_DIR)/../rbc_mesh/src/version_handler.c \
   $(SDK_ROOT)/external/segger_rtt/RTT_Syscalls_GCC.c \
   $(SDK_ROOT)/external/segger_rtt/SEGGER_RTT.c \
   $(SDK_ROOT)/external/segger_rtt/SEGGER_RTT_printf.c \
@@ -169,7 +169,7 @@ INC_FOLDERS += \
   $(SDK_ROOT)/components/softdevice/common/softdevice_handler \
   $(SDK_ROOT)/components/ble/ble_services/ble_hrs \
   $(SDK_ROOT)/components/libraries/log/src \
-  $(PROJ_DIR)/rbc_mesh/include \
+  $(PROJ_DIR)/../rbc_mesh/include \
 # Libraries common to all targets
 LIB_FILES += \
 

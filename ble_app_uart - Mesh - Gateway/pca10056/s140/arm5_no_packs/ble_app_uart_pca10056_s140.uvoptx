@@ -116,6 +116,10 @@
       <TargetDriverDllRegistry>
         <SetRegEntry>
           <Number>0</Number>
+          <Key>DLGUARM</Key>
+        </SetRegEntry>
+        <SetRegEntry>
+          <Number>0</Number>
           <Key>ARMRTXEVENTFLAGS</Key>
           <Name>-L70 -Z18 -C0 -M0 -T1</Name>
         </SetRegEntry>
@@ -145,38 +149,6 @@
           <Number>0</Number>
           <Type>0</Type>
           <LineNumber>914</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>151954</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>1</BreakIfRCount>
-          <Filename>..\..\..\main.c</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression>\\nrf52840_xxaa\../../../main.c\914</Expression>
-        </Bp>
-        <Bp>
-          <Number>1</Number>
-          <Type>0</Type>
-          <LineNumber>903</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>0</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>0</BreakIfRCount>
-          <Filename>..\..\..\main.c</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression></Expression>
-        </Bp>
-        <Bp>
-          <Number>2</Number>
-          <Type>0</Type>
-          <LineNumber>933</LineNumber>
           <EnabledFlag>1</EnabledFlag>
           <Address>0</Address>
           <ByteObject>0</ByteObject>
@@ -210,6 +182,11 @@
           <count>3</count>
           <WinNumber>1</WinNumber>
           <ItemText>fs_config</ItemText>
+        </Ww>
+        <Ww>
+          <count>4</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>p_evt</ItemText>
         </Ww>
       </WatchWindow1>
       <Tracepoint>
@@ -431,7 +408,7 @@
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
           <BreakIfRCount>0</BreakIfRCount>
-          <Filename>..\..\..\rbc_mesh\src\version_handler.c</Filename>
+          <Filename>C:\NordicSDK\SDKv13\examples\Mesh_demo\ble_app_uart - Mesh - Gateway\rbc_mesh\src\version_handler.c</Filename>
           <ExecCommand></ExecCommand>
           <Expression></Expression>
         </Bp>
@@ -1035,7 +1012,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\rbc_mesh\src\event_handler.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\rbc_mesh\src\event_handler.c</PathWithFileName>
       <FilenameWithoutPath>event_handler.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -1047,7 +1024,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\rbc_mesh\src\fifo.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\rbc_mesh\src\fifo.c</PathWithFileName>
       <FilenameWithoutPath>fifo.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -1059,7 +1036,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\rbc_mesh\src\handle_storage.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\rbc_mesh\src\handle_storage.c</PathWithFileName>
       <FilenameWithoutPath>handle_storage.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -1071,7 +1048,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\rbc_mesh\src\mesh_gatt.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\rbc_mesh\src\mesh_gatt.c</PathWithFileName>
       <FilenameWithoutPath>mesh_gatt.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -1083,7 +1060,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\rbc_mesh\src\mesh_packet.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\rbc_mesh\src\mesh_packet.c</PathWithFileName>
       <FilenameWithoutPath>mesh_packet.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -1095,7 +1072,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\rbc_mesh\src\nrf_flash.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\rbc_mesh\src\nrf_flash.c</PathWithFileName>
       <FilenameWithoutPath>nrf_flash.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -1107,7 +1084,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\rbc_mesh\src\radio_control.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\rbc_mesh\src\radio_control.c</PathWithFileName>
       <FilenameWithoutPath>radio_control.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -1119,7 +1096,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\rbc_mesh\src\rand.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\rbc_mesh\src\rand.c</PathWithFileName>
       <FilenameWithoutPath>rand.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -1131,7 +1108,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\rbc_mesh\src\rbc_mesh.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\rbc_mesh\src\rbc_mesh.c</PathWithFileName>
       <FilenameWithoutPath>rbc_mesh.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -1143,7 +1120,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\rbc_mesh\src\timer.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\rbc_mesh\src\timer.c</PathWithFileName>
       <FilenameWithoutPath>timer.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -1155,7 +1132,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\rbc_mesh\src\timer_scheduler.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\rbc_mesh\src\timer_scheduler.c</PathWithFileName>
       <FilenameWithoutPath>timer_scheduler.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -1167,7 +1144,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\rbc_mesh\src\timeslot.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\rbc_mesh\src\timeslot.c</PathWithFileName>
       <FilenameWithoutPath>timeslot.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -1179,7 +1156,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\rbc_mesh\src\transport_control.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\rbc_mesh\src\transport_control.c</PathWithFileName>
       <FilenameWithoutPath>transport_control.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -1191,7 +1168,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\rbc_mesh\src\trickle.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\rbc_mesh\src\trickle.c</PathWithFileName>
       <FilenameWithoutPath>trickle.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -1203,7 +1180,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\rbc_mesh\src\version_handler.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\rbc_mesh\src\version_handler.c</PathWithFileName>
       <FilenameWithoutPath>version_handler.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
