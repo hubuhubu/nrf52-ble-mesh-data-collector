@@ -99,7 +99,7 @@ static uint16_t                         m_conn_handle = BLE_CONN_HANDLE_INVALID;
 static nrf_ble_gatt_t                   m_gatt;                                     /**< GATT module instance. */
 static ble_uuid_t                       m_adv_uuids[] = {{BLE_UUID_NUS_SERVICE, NUS_SERVICE_UUID_TYPE}};  /**< Universally unique service identifier. */
 static uint16_t                         m_ble_nus_max_data_len = BLE_GATT_ATT_MTU_DEFAULT - 3;  /**< Maximum length of data (in bytes) that can be transmitted to the peer by the Nordic UART service module. */
-
+volatile static uint8_t reinitialize_countdown;
 
 //===MESH==============
 #include "rbc_mesh.h"
@@ -192,7 +192,20 @@ void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)
     app_error_handler(DEAD_BEEF, line_num, p_file_name);
 }
 
-
+void all_LED_on(void)
+{
+    nrf_gpio_pin_clear(LED_1);
+    nrf_gpio_pin_clear(LED_2);
+    nrf_gpio_pin_clear(LED_3);
+    nrf_gpio_pin_clear(LED_4);
+}
+void all_LED_off(void)
+{
+    nrf_gpio_pin_set(LED_1);
+    nrf_gpio_pin_set(LED_2);
+    nrf_gpio_pin_set(LED_3);
+    nrf_gpio_pin_set(LED_4);
+}
 /**@brief Function for the GAP initialization.
  *
  * @details This function will set up all the necessary GAP (Generic Access Profile) parameters of
@@ -648,7 +661,8 @@ static void one_second_tick_timeout_handler(void * p_context)
     uint16_t length = 23;
     uint8_t data_array[23];
     uint8_t active_sensor_count = 0;
-    
+    uint8_t mesh_data[2];
+
     err_code = rbc_mesh_value_get(1, data_array, &length);
     
     if (err_code == NRF_SUCCESS)
@@ -682,6 +696,23 @@ static void one_second_tick_timeout_handler(void * p_context)
     }
     printf("\r\nNumber of Active Sensors: %d",active_sensor_count);
     printf("\r\n==================================");           
+    // If reinitilize of RBC mesh network is in progress
+    if ( reinitialize_countdown)
+    {   
+        all_LED_on();
+      
+        NRF_LOG_INFO("\r\nSend Reset Handle Request- Network ready in %d!",reinitialize_countdown);
+        mesh_data[0] = RESET_HANDLE_OPCODE;
+        mesh_data[1] = reinitialize_countdown;
+        rbc_mesh_value_set(COMMISSION_HANDLE, mesh_data, 2);    
+        reinitialize_countdown--;
+        if (reinitialize_countdown==0)
+        {
+            all_LED_off();
+        }
+        
+    }
+   
 }
 
 
@@ -807,7 +838,6 @@ void leds_buttons_init(void)
     nrf_gpio_cfg_input(BUTTON_4, NRF_GPIO_PIN_PULLUP);
 }
 
-
 /**@brief Function for initializing the nrf log module.
  */
 static void log_init(void)
@@ -888,14 +918,15 @@ static void rbc_mesh_event_handler(rbc_mesh_event_t* p_evt)
             {
                 case COMMISSION_HANDLE:
                     NRF_LOG_INFO("\r\nCommission request!");
-                    if ((p_evt->params.rx.p_data[0] == REQUESTING_ID_STATE) && (p_evt->params.rx.data_len == 3))
+                    
+                    if ((p_evt->params.rx.p_data[0] == REQUEST_HANDLE_OPCODE) && (p_evt->params.rx.data_len == 3)&&(reinitialize_countdown==0))
                     {
                         uint16_t chip_id, handle_ID;
                         chip_id	= ((uint16_t)p_evt->params.rx.p_data[1] << 8) | p_evt->params.rx.p_data[2];
                         handle_ID = allocate_handle_ID(chip_id);
                         if (handle_ID != NETWORK_FULL)
                         {
-                            NRF_LOG_INFO("\r\nAssigned new Handle ID!");
+                            NRF_LOG_INFO("\r\nAssigned new Handle ID_!");
                             mesh_data[0] = ASSIGN_HANDLE_OPCODE;
                             mesh_data[1] = chip_id >> 8;
                             mesh_data[2] = chip_id;
@@ -957,7 +988,10 @@ static void fs_evt_handler(fs_evt_t const * const evt, fs_ret_t result)
     }
 }
 
-
+/**
+* @brief initialize_node_id_table  initialize the node id table. Erase the stored table if Button 4 is pressed
+* Otherwise read from flash to restore the table
+*/
 void initialize_node_id_table(void)
 {
     //If button 4 is pressed , erase Node_ID_table , otherwise restore it from flash
@@ -976,6 +1010,30 @@ void initialize_node_id_table(void)
     
 }  
 
+void mesh_init(void )
+{
+    uint8_t mesh_data[2];
+    uint32_t err_code;
+    rbc_mesh_init_params_t init_params;
+    init_params.access_addr = MESH_ACCESS_ADDR;
+    init_params.interval_min_ms = MESH_INTERVAL_MIN_MS;
+    init_params.channel = MESH_CHANNEL;
+    init_params.lfclksrc = MESH_CLOCK_SOURCE;
+    init_params.tx_power = RBC_MESH_TXPOWER_0dBm ;
+    
+    err_code = rbc_mesh_init(init_params);
+    APP_ERROR_CHECK(err_code);
+
+    /* enable handle ID for all nodes and the commision handle*/
+    for (uint32_t i = 0; i < MAX_NODE+NODE_ID_START; i++)
+    {
+        err_code = rbc_mesh_value_enable(i);
+        APP_ERROR_CHECK(err_code);
+    }
+	//Set initial version for commission handle
+    err_code = rbc_mesh_value_set(COMMISSION_HANDLE, mesh_data, 0);    
+}
+
 
 /**@brief Application main function.
  */
@@ -984,7 +1042,7 @@ int main(void)
     uint32_t err_code;
     bool     erase_bonds;
     rbc_mesh_event_t evt;
-    uint8_t mesh_data[2];
+    
     // Initialize.
     err_code = app_timer_init();
     APP_ERROR_CHECK(err_code);
@@ -1002,24 +1060,7 @@ int main(void)
     conn_params_init();
     fs_init();
     initialize_node_id_table();
-	rbc_mesh_init_params_t init_params;
-    init_params.access_addr = MESH_ACCESS_ADDR;
-    init_params.interval_min_ms = MESH_INTERVAL_MIN_MS;
-    init_params.channel = MESH_CHANNEL;
-    init_params.lfclksrc = MESH_CLOCK_SOURCE;
-    init_params.tx_power = RBC_MESH_TXPOWER_0dBm ;
-    
-    err_code = rbc_mesh_init(init_params);
-    APP_ERROR_CHECK(err_code);
-
-    /* enable handle ID for all nodes*/
-    for (uint32_t i = 0; i < MAX_NODE+NODE_ID_START; i++)
-    {
-        err_code = rbc_mesh_value_enable(i);
-        APP_ERROR_CHECK(err_code);
-    }
-	//Set initial version for commission handle
-    err_code = rbc_mesh_value_set(COMMISSION_HANDLE, mesh_data, 0);    
+	mesh_init();
     NRF_LOG_INFO("Mesh Start!\r\n");
     err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
     APP_ERROR_CHECK(err_code);
@@ -1033,6 +1074,12 @@ int main(void)
             rbc_mesh_event_handler(&evt);
             rbc_mesh_event_release(&evt);
         }
+        if(nrf_gpio_pin_read(BUTTON_4) == 0)
+        {
+            reinitialize_countdown=10;
+        }
+            
+
     }
 }
 

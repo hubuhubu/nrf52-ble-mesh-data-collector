@@ -104,7 +104,7 @@
 #if defined BOARD_PCA10056 
 
 #define LED_START                       13
-
+#define INVALID_HANDLE_ID               0xFF
 #endif
 //nrf_nvic_state_t nrf_nvic_state = {0};
 static nrf_clock_lf_cfg_t m_clock_cfg = 
@@ -134,15 +134,16 @@ enum COMMISSIONING_OPCODES
 {
   PING = 0,                 /**< Channel Map. @ref ble_gap_opt_ch_map_t  */
   REQUEST_HANDLE_OPCODE,    /**< Local connection latency. @ref ble_gap_opt_local_conn_latency_t */
-  ASSIGN_HANDLE_OPCODE
+  ASSIGN_HANDLE_OPCODE,
+  RESET_HANDLE_OPCODE  
 };
 
 
 APP_TIMER_DEF(m_one_sec_timer_id);                              /**< Battery timer. */
 
 #define ONE_SECOND_INTERVAL APP_TIMER_TICKS(1000)               /**< Battery level measurement interval (ticks). */
-
-uint16_t Handle_ID;
+volatile static uint8_t reinitialize_countdown;
+uint16_t Handle_ID =INVALID_HANDLE_ID;
 uint8_t  current_state = UNASSIGNED_ID_STATE;
 uint16_t CHIP_ID;
 
@@ -169,7 +170,20 @@ void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)
     app_error_handler(DEAD_BEEF, line_num, p_file_name);
 }
 
-
+void all_LED_on(void)
+{
+    nrf_gpio_pin_clear(LED_1);
+    nrf_gpio_pin_clear(LED_2);
+    nrf_gpio_pin_clear(LED_3);
+    nrf_gpio_pin_clear(LED_4);
+}
+void all_LED_off(void)
+{
+    nrf_gpio_pin_set(LED_1);
+    nrf_gpio_pin_set(LED_2);
+    nrf_gpio_pin_set(LED_3);
+    nrf_gpio_pin_set(LED_4);
+}
 /**@brief Function for the SoftDevice initialization.
  *
  * @details This function initializes the SoftDevice and the BLE event interrupt.
@@ -356,7 +370,7 @@ static void rbc_mesh_event_handler(rbc_mesh_event_t* p_evt)
 		case COMMISSION_HANDLE:
             if (current_state == UNASSIGNED_ID_STATE) //Commision handle version is udpated, start requesting Handle_ID
             {
-                current_state = REQUESTING_ID_STATE;
+               // current_state = REQUESTING_ID_STATE;
              //   printf("\r\nState now is REQUESTING_ID_STATE!\r\n");
                 break; 
             }  
@@ -376,6 +390,17 @@ static void rbc_mesh_event_handler(rbc_mesh_event_t* p_evt)
                 }
                     
             }
+            if ( p_evt->params.rx.p_data[0]==RESET_HANDLE_OPCODE)
+            {
+                if (!reinitialize_countdown)
+                {
+                    reinitialize_countdown=p_evt->params.rx.p_data[1];
+                    current_state =UNASSIGNED_ID_STATE;
+                    Handle_ID = INVALID_HANDLE_ID;
+                }
+               
+            }
+            
             break;
             
         default:
@@ -426,7 +451,7 @@ static void one_sec_timeout_handler(void * p_context)
             nrf_gpio_pin_set(LED_1);          
         }
     }
-        
+    
     switch (current_state)
     {
         case UNASSIGNED_ID_STATE:	 
@@ -448,16 +473,28 @@ static void one_sec_timeout_handler(void * p_context)
             break;
             
 		case REQUESTING_ID_STATE:
-			mesh_data[0] = REQUEST_HANDLE_OPCODE;
-			mesh_data[1] = CHIP_ID >> 8;
-			mesh_data[2] = (uint8_t)CHIP_ID;
-			error_code = rbc_mesh_value_set(COMMISSION_HANDLE, mesh_data, 3);
+            mesh_data[0] = REQUEST_HANDLE_OPCODE;
+            mesh_data[1] = CHIP_ID >> 8;
+            mesh_data[2] = (uint8_t)CHIP_ID;
+            error_code = rbc_mesh_value_set(COMMISSION_HANDLE, mesh_data, 3);
             APP_ERROR_CHECK(error_code);
+    
             break;
         
         default:
             break;
     }
+    // If reinitilize in progress
+    if (reinitialize_countdown)    
+    {   all_LED_on();
+        reinitialize_countdown--;
+        if (reinitialize_countdown==0) 
+        {
+            all_LED_off();
+            current_state=REQUESTING_ID_STATE;
+        }
+    }
+    
 }
 /**@brief Function for the Timer initialization.
  *
@@ -479,7 +516,27 @@ static void timers_init(void)
 
 }
 
-
+void mesh_init(void)
+{   
+    uint32_t err_code;
+    rbc_mesh_init_params_t init_params;
+ 
+    init_params.access_addr = MESH_ACCESS_ADDR;
+    init_params.interval_min_ms = MESH_INTERVAL_MIN_MS;
+    init_params.channel = MESH_CHANNEL;
+    init_params.lfclksrc = MESH_CLOCK_SOURCE;
+    init_params.tx_power = RBC_MESH_TXPOWER_0dBm ;
+      
+    uint32_t error_code = rbc_mesh_init(init_params);
+   
+     /* enable handle ID for all nodes*/
+    for (uint32_t i = 0; i < MAX_NODE+NODE_ID_START; ++i)
+    {
+        err_code = rbc_mesh_value_enable(i);
+        APP_ERROR_CHECK(err_code);
+    }   
+    reinitialize_countdown=0;
+}
 /**@brief Application main function.
  */
 int main(void)
@@ -516,7 +573,7 @@ int main(void)
         err_code = rbc_mesh_value_enable(i);
         APP_ERROR_CHECK(err_code);
     }   
-    APP_ERROR_CHECK(error_code);
+
     timers_init();
     application_timers_start();
     current_state= REQUESTING_ID_STATE;
