@@ -134,10 +134,6 @@ static uint32_t mesh_gatt_evt_push(mesh_gatt_evt_t* p_gatt_evt)
     {
         return BLE_ERROR_NOT_ENABLED;
     }
-
-    uint8_t count;
-    uint8_t err_code;
-
 /*
     err_code = sd_ble_tx_packet_count_get(m_active_conn_handle, &count);
 

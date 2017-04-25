@@ -60,7 +60,7 @@
 #include "nrf_ble_gatt.h"
 #include "app_timer.h"
 #include "app_button.h"
-#include "ble_nus.h"
+#include "ble_nus_mesh.h"
 #include "app_uart.h"
 #include "app_util_platform.h"
 #include "bsp.h"
@@ -74,14 +74,14 @@
 
 #define APP_FEATURE_NOT_SUPPORTED       BLE_GATT_STATUS_ATTERR_APP_BEGIN + 2        /**< Reply when unsupported features are requested. */
 
-#define DEVICE_NAME                     "Nordic_UART"                               /**< Name of device. Will be included in the advertising data. */
+#define DEVICE_NAME                     "Nordic_Mesh"                               /**< Name of device. Will be included in the advertising data. */
 #define NUS_SERVICE_UUID_TYPE           BLE_UUID_TYPE_VENDOR_BEGIN                  /**< UUID type for the Nordic UART Service (vendor specific). */
 
 #define APP_ADV_INTERVAL                64                                         /**< The advertising interval (in units of 0.625 ms. This value corresponds to 40 ms). */
 #define APP_ADV_TIMEOUT_IN_SECONDS      0                                         /**< The advertising timeout (in units of seconds). */
 
-#define MIN_CONN_INTERVAL               MSEC_TO_UNITS(100, UNIT_1_25_MS)             /**< Minimum acceptable connection interval (20 ms), Connection interval uses 1.25 ms units. */
-#define MAX_CONN_INTERVAL               MSEC_TO_UNITS(150, UNIT_1_25_MS)             /**< Maximum acceptable connection interval (75 ms), Connection interval uses 1.25 ms units. */
+#define MIN_CONN_INTERVAL               MSEC_TO_UNITS(20, UNIT_1_25_MS)             /**< Minimum acceptable connection interval (20 ms), Connection interval uses 1.25 ms units. */
+#define MAX_CONN_INTERVAL               MSEC_TO_UNITS(50, UNIT_1_25_MS)             /**< Maximum acceptable connection interval (75 ms), Connection interval uses 1.25 ms units. */
 #define SLAVE_LATENCY                   0                                           /**< Slave latency. */
 #define CONN_SUP_TIMEOUT                MSEC_TO_UNITS(4000, UNIT_10_MS)             /**< Connection supervisory timeout (4 seconds), Supervision Timeout uses 10 ms units. */
 #define FIRST_CONN_PARAMS_UPDATE_DELAY  APP_TIMER_TICKS(5000)                       /**< Time from initiating event (connect or start of notification) to first time sd_ble_gap_conn_param_update is called (5 seconds). */
@@ -117,6 +117,7 @@ volatile static uint8_t reinitialize_countdown;
 #define NETWORK_FULL            0xFFFF
 
 APP_TIMER_DEF(m_one_second_tick_timer_id);                        /**< Battery timer. */
+static void one_second_tick_timeout_handler(void * p_context);
 
 //nrf_nvic_state_t nrf_nvic_state = {0};
 static nrf_clock_lf_cfg_t m_clock_cfg = 
@@ -649,71 +650,6 @@ void bsp_event_handler(bsp_event_t event)
             break;
     }
 }
-/**@brief Function for handling the one second timer timeout.
- *
- * @details This function will be called each time the battery level measurement timer expires.
- *
- * @param[in] p_context  Pointer used for passing some arbitrary information (context) from the
- *                       app_start_timer() call to the timeout handler.
- */
-static void one_second_tick_timeout_handler(void * p_context)
-{   uint32_t err_code;
-    uint16_t length = 23;
-    uint8_t data_array[23];
-    uint8_t active_sensor_count = 0;
-    uint8_t mesh_data[2];
-
-    err_code = rbc_mesh_value_get(1, data_array, &length);
-    
-    if (err_code == NRF_SUCCESS)
-    {
-        err_code = ble_nus_string_send(&m_nus, &data_array[1], 5);
-    
-        if ((err_code != NRF_ERROR_INVALID_STATE) && (err_code != NRF_ERROR_BUSY))
-        {
-            APP_ERROR_CHECK(err_code);
-        }
-    }
-    else
-    {
-        APP_ERROR_CHECK(0);
-    }
-    
-    for(uint8_t i = 0; i < MAX_NODE; i++)
-    {
-        if (active_sensors[i] > 0)
-        {
-            active_sensors[i]--;
-            active_sensor_count++;
-                
-            printf("\r\nID: %d[", i);
-            for (uint8_t j = 0; j < SENSOR_DATA_SIZE; j++)
-            {
-                printf("%d-", sensor_data[j + i * SENSOR_DATA_SIZE]);
-            }
-            printf("]");
-        }
-    }
-    printf("\r\nNumber of Active Sensors: %d",active_sensor_count);
-    printf("\r\n==================================");           
-    // If reinitilize of RBC mesh network is in progress
-    if ( reinitialize_countdown)
-    {   
-        all_LED_on();
-      
-        NRF_LOG_INFO("\r\nSend Reset Handle Request- Network ready in %d!",reinitialize_countdown);
-        mesh_data[0] = RESET_HANDLE_OPCODE;
-        mesh_data[1] = reinitialize_countdown;
-        rbc_mesh_value_set(COMMISSION_HANDLE, mesh_data, 2);    
-        reinitialize_countdown--;
-        if (reinitialize_countdown==0)
-        {
-            all_LED_off();
-        }
-        
-    }
-   
-}
 
 
 /**@brief Function for the Timer initialization.
@@ -973,6 +909,66 @@ static void rbc_mesh_event_handler(rbc_mesh_event_t* p_evt)
     }   
 }
 
+/**@brief Function for handling the one second timer timeout.
+ *
+ * @details This function will be called each time the battery level measurement timer expires.
+ *
+ * @param[in] p_context  Pointer used for passing some arbitrary information (context) from the
+ *                       app_start_timer() call to the timeout handler.
+ */
+static void one_second_tick_timeout_handler(void * p_context)
+{   uint32_t err_code;
+    uint16_t length = 23;
+    uint8_t data_array[23];
+    uint8_t active_sensor_count = 0;
+    uint8_t mesh_data[2];
+
+    err_code = ble_nus_string_send(&m_nus, sensor_data, 20);
+    if ((err_code != NRF_ERROR_INVALID_STATE) && (err_code != NRF_ERROR_BUSY))
+    {
+        APP_ERROR_CHECK(err_code);
+    }
+    err_code = ble_nus_data_set (&m_nus,sensor_data,sizeof(sensor_data));
+    if ((err_code != NRF_ERROR_INVALID_STATE) && (err_code != NRF_ERROR_BUSY))
+    {
+        APP_ERROR_CHECK(err_code);
+    }
+    for(uint8_t i = 0; i < MAX_NODE; i++)
+    {
+        if (active_sensors[i] > 0)
+        {
+            active_sensors[i]--;
+            active_sensor_count++;
+                
+            printf("\r\nID: %d[", i);
+            for (uint8_t j = 0; j < SENSOR_DATA_SIZE; j++)
+            {
+                printf("%d-", sensor_data[j + i * SENSOR_DATA_SIZE]);
+            }
+            printf("]");
+        }
+    }
+    printf("\r\nNumber of Active Sensors: %d",active_sensor_count);
+    printf("\r\n==================================");  
+    
+    // Check if reinitilize of RBC mesh network is in progress
+    if ( reinitialize_countdown)
+    {   
+        all_LED_on();
+      
+        NRF_LOG_INFO("\r\nSend Reset Handle Request- Network ready in %d!",reinitialize_countdown);
+        mesh_data[0] = RESET_HANDLE_OPCODE;
+        mesh_data[1] = reinitialize_countdown;
+        rbc_mesh_value_set(COMMISSION_HANDLE, mesh_data, 2);    
+        reinitialize_countdown--;
+        if (reinitialize_countdown==0)
+        {
+            all_LED_off();
+        }
+        
+    }
+   
+}
 
 static void fs_evt_handler(fs_evt_t const * const evt, fs_ret_t result)
 {
@@ -1019,7 +1015,7 @@ void mesh_init(void )
     init_params.interval_min_ms = MESH_INTERVAL_MIN_MS;
     init_params.channel = MESH_CHANNEL;
     init_params.lfclksrc = MESH_CLOCK_SOURCE;
-    init_params.tx_power = RBC_MESH_TXPOWER_0dBm ;
+    init_params.tx_power = RBC_MESH_TXPOWER_Pos8dBm ;
     
     err_code = rbc_mesh_init(init_params);
     APP_ERROR_CHECK(err_code);

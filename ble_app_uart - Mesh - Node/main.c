@@ -385,6 +385,9 @@ static void rbc_mesh_event_handler(rbc_mesh_event_t* p_evt)
                     current_state = NORMAL_OP_STATE;
                     error_code = rbc_mesh_value_enable(Handle_ID);
                     APP_ERROR_CHECK(error_code);
+                    //turn off LED 4
+                    nrf_gpio_pin_set(LED_4);
+
 
                  //   printf("\r\nState now is NORMAL_OP! Handle= %d\r\n", Handle_ID);
                 }
@@ -491,7 +494,10 @@ static void one_sec_timeout_handler(void * p_context)
         if (reinitialize_countdown==0) 
         {
             all_LED_off();
+            //Enter Requesting ID state, turn on LED 4
             current_state=REQUESTING_ID_STATE;
+            nrf_gpio_pin_clear(LED_4);
+
         }
     }
     
@@ -549,7 +555,7 @@ int main(void)
     // Initialize.
     err_code = app_timer_init();
     APP_ERROR_CHECK(err_code);
-     nrf_gpio_pin_set(LED_1);
+
 	timers_init();
     uart_init();
      
@@ -563,7 +569,7 @@ int main(void)
     init_params.interval_min_ms = MESH_INTERVAL_MIN_MS;
     init_params.channel = MESH_CHANNEL;
     init_params.lfclksrc = MESH_CLOCK_SOURCE;
-    init_params.tx_power = RBC_MESH_TXPOWER_0dBm ;
+    init_params.tx_power = RBC_MESH_TXPOWER_Pos8dBm ;
       
     uint32_t error_code = rbc_mesh_init(init_params);
    
@@ -578,7 +584,7 @@ int main(void)
     application_timers_start();
     current_state= REQUESTING_ID_STATE;
 	//Enable Commission handle
-   
+    nrf_gpio_pin_clear(LED_4);
     NRF_LOG_INFO("Mesh Starts!\r\n");
    // err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
    // APP_ERROR_CHECK(err_code);

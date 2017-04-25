@@ -214,6 +214,8 @@ typedef enum
 {
     RBC_MESH_TXPOWER_0dBm     = 0x00UL, /**< 0dBm. */
     RBC_MESH_TXPOWER_Pos4dBm  = 0x04UL, /**< +4dBm. */
+    RBC_MESH_TXPOWER_Pos8dBm  = 0x08UL, /**< +8dBm. */
+    RBC_MESH_TXPOWER_Pos9dBm  = 0x09UL, /**< +9dBm. */
     RBC_MESH_TXPOWER_Neg30dBm = 0xD8UL, /**< -30dBm. */
     RBC_MESH_TXPOWER_Neg20dBm = 0xECUL, /**< -20dBm. */
     RBC_MESH_TXPOWER_Neg16dBm = 0xF0UL, /**< -16dBm. */
