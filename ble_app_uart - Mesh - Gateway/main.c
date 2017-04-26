@@ -918,8 +918,7 @@ static void rbc_mesh_event_handler(rbc_mesh_event_t* p_evt)
  */
 static void one_second_tick_timeout_handler(void * p_context)
 {   uint32_t err_code;
-    uint16_t length = 23;
-    uint8_t data_array[23];
+ 
     uint8_t active_sensor_count = 0;
     uint8_t mesh_data[2];
 
@@ -955,7 +954,6 @@ static void one_second_tick_timeout_handler(void * p_context)
     if ( reinitialize_countdown)
     {   
         all_LED_on();
-      
         NRF_LOG_INFO("\r\nSend Reset Handle Request- Network ready in %d!",reinitialize_countdown);
         mesh_data[0] = RESET_HANDLE_OPCODE;
         mesh_data[1] = reinitialize_countdown;
@@ -1036,7 +1034,6 @@ void mesh_init(void )
 int main(void)
 {
     uint32_t err_code;
-    bool     erase_bonds;
     rbc_mesh_event_t evt;
     
     // Initialize.
