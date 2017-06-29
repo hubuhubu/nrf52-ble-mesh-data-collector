@@ -173,7 +173,6 @@ static void timeslot_end(void)
     m_end_timer_triggered = false;
     CLEAR_PIN(PIN_IN_TS);
     CLEAR_PIN(PIN_IN_CB);
-    
 #if defined (NRF52) || defined (NRF52840_XXAA)
     NRF_TIMER0->TASKS_STOP = 0;
     NRF_TIMER0->TASKS_SHUTDOWN = 1;
@@ -242,7 +241,7 @@ static nrf_radio_signal_callback_return_param_t* radio_signal_callback(uint8_t s
 {
     static uint32_t requested_extend_time = 0;
     static uint32_t successful_extensions = 0;
-    SET_PIN(PIN_IN_CB);
+
     m_is_in_callback = true;
 
     switch (m_timeslot_forced_command)
@@ -307,6 +306,7 @@ static nrf_radio_signal_callback_return_param_t* radio_signal_callback(uint8_t s
             break;
 
         case NRF_RADIO_CALLBACK_SIGNAL_TYPE_EXTEND_SUCCEEDED:
+             SET_PIN(PIN_IN_CB);
             m_timeslot_length += requested_extend_time;
             requested_extend_time = 0;
             ++successful_extensions;
@@ -321,25 +321,28 @@ static nrf_radio_signal_callback_return_param_t* radio_signal_callback(uint8_t s
             if (m_timeslot_count == 1)
             {
                 if (m_timeslot_length + m_negotiate_timeslot_length < TIMESLOT_MAX_LENGTH_FIRST_US)
-                {
+                {              
+ 
                     ts_extend(m_negotiate_timeslot_length);
+                    
+                    
                 }
             }
             else
             {
                 if (m_timeslot_length + m_negotiate_timeslot_length < TIMESLOT_MAX_LENGTH_US)
                 {
-                    ts_extend(m_negotiate_timeslot_length);
+                   // ts_extend(m_negotiate_timeslot_length);
                 }
             }
-
+CLEAR_PIN(PIN_IN_CB);
             break;
 
         case NRF_RADIO_CALLBACK_SIGNAL_TYPE_EXTEND_FAILED:
             m_negotiate_timeslot_length >>= 1;
             if (m_negotiate_timeslot_length > 1000)
             {
-                ts_extend(m_negotiate_timeslot_length);
+               // ts_extend(m_negotiate_timeslot_length);
             }
             break;
 
@@ -365,7 +368,7 @@ static nrf_radio_signal_callback_return_param_t* radio_signal_callback(uint8_t s
     }
 
     m_is_in_callback = false;
-    CLEAR_PIN(PIN_IN_CB);
+    //CLEAR_PIN(PIN_IN_CB);
     return &m_ret_param;
 }
 

@@ -63,8 +63,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     #endif
 #endif
 
-#define PIN_MESH_TX         (0)
-#define PIN_SD_EVT_HANDLER  (1)
+#define PIN_MESH_TX         (9)
+#define PIN_SD_EVT_HANDLER  (8)
 #define PIN_IN_TS           (2)
 #define PIN_CONSISTENT      (3)
 #define PIN_INCONSISTENT    (4)

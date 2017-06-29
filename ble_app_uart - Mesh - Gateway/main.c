@@ -77,7 +77,7 @@
 #define DEVICE_NAME                     "Nordic_Mesh"                               /**< Name of device. Will be included in the advertising data. */
 #define NUS_SERVICE_UUID_TYPE           BLE_UUID_TYPE_VENDOR_BEGIN                  /**< UUID type for the Nordic UART Service (vendor specific). */
 
-#define APP_ADV_INTERVAL                64                                         /**< The advertising interval (in units of 0.625 ms. This value corresponds to 40 ms). */
+#define APP_ADV_INTERVAL                4800                                         /**< The advertising interval (in units of 0.625 ms. This value corresponds to 40 ms). */
 #define APP_ADV_TIMEOUT_IN_SECONDS      0                                         /**< The advertising timeout (in units of seconds). */
 
 #define MIN_CONN_INTERVAL               MSEC_TO_UNITS(20, UNIT_1_25_MS)             /**< Minimum acceptable connection interval (20 ms), Connection interval uses 1.25 ms units. */
@@ -100,7 +100,7 @@ static nrf_ble_gatt_t                   m_gatt;                                 
 static ble_uuid_t                       m_adv_uuids[] = {{BLE_UUID_NUS_SERVICE, NUS_SERVICE_UUID_TYPE}};  /**< Universally unique service identifier. */
 static uint16_t                         m_ble_nus_max_data_len = BLE_GATT_ATT_MTU_DEFAULT - 3;  /**< Maximum length of data (in bytes) that can be transmitted to the peer by the Nordic UART service module. */
 volatile static uint8_t reinitialize_countdown;
-
+uint16_t counting=0;
 //===MESH==============
 #include "rbc_mesh.h"
 #define MESH_ACCESS_ADDR        (RBC_MESH_ACCESS_ADDRESS_BLE_ADV)   /**< Access address for the mesh to operate on. */
@@ -764,6 +764,10 @@ void leds_buttons_init(void)
     nrf_gpio_cfg_output(LED_2);
     nrf_gpio_cfg_output(LED_4);
     nrf_gpio_cfg_output(LED_3);
+    nrf_gpio_cfg_output(2);
+    nrf_gpio_cfg_output(7);
+    nrf_gpio_cfg_output(LED_4);
+    nrf_gpio_cfg_output(LED_3);
     nrf_gpio_pin_set(LED_1);
     nrf_gpio_pin_set(LED_2);
     nrf_gpio_pin_set(LED_3);
@@ -772,6 +776,7 @@ void leds_buttons_init(void)
     nrf_gpio_cfg_input(BUTTON_2, NRF_GPIO_PIN_PULLUP);
     nrf_gpio_cfg_input(BUTTON_3, NRF_GPIO_PIN_PULLUP);
     nrf_gpio_cfg_input(BUTTON_4, NRF_GPIO_PIN_PULLUP);
+    
 }
 
 /**@brief Function for initializing the nrf log module.
@@ -949,6 +954,7 @@ static void one_second_tick_timeout_handler(void * p_context)
     }
     printf("\r\nNumber of Active Sensors: %d",active_sensor_count);
     printf("\r\n==================================");  
+ 
     
     // Check if reinitilize of RBC mesh network is in progress
     if ( reinitialize_countdown)

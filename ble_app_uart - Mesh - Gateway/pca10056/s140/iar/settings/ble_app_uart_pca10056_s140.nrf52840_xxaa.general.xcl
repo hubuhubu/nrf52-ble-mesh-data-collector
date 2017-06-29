@@ -1,0 +1,13 @@
+"C:\Program Files (x86)\IAR Systems\Embedded Workbench 8.0\arm\bin\armproc.dll" 
+
+"C:\Program Files (x86)\IAR Systems\Embedded Workbench 8.0\arm\bin\armjlink2.dll" 
+
+"C:\NordicSDK\SDKv13\examples\nrf52-ble-mesh-data-collector\ble_app_uart - Mesh - Gateway\pca10056\s140\iar\_build\ble_app_uart_pca10056_s140.out" 
+
+--plugin "C:\Program Files (x86)\IAR Systems\Embedded Workbench 8.0\arm\bin\armbat.dll" 
+
+--device_macro "C:\Program Files (x86)\IAR Systems\Embedded Workbench 8.0\arm\config\debugger\NordicSemi\nRF52.dmac" 
+
+
+
+
